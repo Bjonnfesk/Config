@@ -11,8 +11,8 @@ import com.aastorp.logger.Logger;
 
 // TODO: Auto-generated Javadoc
 /**
- * Extends {@link com.aastorp.common.databases.Database Database} by providing
- * functionality specific to Config's Setting Databases. 
+ * Extends {@link com.aastorp.common.databases.SqliteDatabase SqliteDatabase} by providing
+ * functionality specific to Config's Setting SqliteDatabases. 
  */
 public class SettingDatabase extends SqliteDatabase {
 
