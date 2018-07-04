@@ -2,6 +2,8 @@ package com.aastorp.config;
 
 import javax.swing.JLabel;
 
+
+
 // TODO: Auto-generated Javadoc
 /**
  * The Interface Setting.

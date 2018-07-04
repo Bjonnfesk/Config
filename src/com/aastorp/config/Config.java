@@ -1,11 +1,11 @@
 package com.aastorp.config;
 
-import java.awt.Component;
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.sql.SQLException;
+import java.util.HashMap;
 
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 
 import com.aastorp.bibliothecaaastorpiana.databases.SqliteDatabase;
@@ -32,7 +32,9 @@ public class Config {
 	/**
 	 * Private constructor for singleton.
 	 */
-	private Config() {}
+	private Config() {
+		Config.l = new Logger(Config.class, Integer.valueOf(Logger.INFO), true, new File("config.log"));
+	}
 
 	/**
 	 * Inits the Config, loading the settings from the specified database file.
@@ -40,11 +42,11 @@ public class Config {
 	 * @param settingDatabaseFile the setting database file
 	 * @return The resulting Config
 	 */
-	private static Config init(File settingDatabaseFile) throws SQLException, ClassNotFoundException, Exception {
+	private static Config init(File settingDatabaseFile) throws SQLException, ClassNotFoundException, NullPointerException, Exception {
 		instance = new Config();
 		Config.getInstance().sdb = new SettingDatabase(settingDatabaseFile);
 		Config.getInstance().readSettings();
-		Config.l = new Logger(Config.class, Integer.valueOf((Integer)Config.getInstance().getSetting("logLevel").getValue()), true, new File("config.log"));
+		Config.getInstance().settings.addChangeListener(new OmniListener());
 		return Config.getInstance();
 	}
 
@@ -82,7 +84,6 @@ public class Config {
 				l.d(F, "\t\t\t</settingType>");
 				l.d(F, "\t\t</" + setting.getName() + ">");
 //			</horribleXmlLoggingHack>
-				this.getSettings().add(setting);
 			} catch (NullPointerException e) {
 				l.w(F, "Got a Setting that is null! Sadly, no more information can be given, as Java does not provide it even to developers.");
 			}
@@ -106,8 +107,10 @@ public class Config {
 				l.e("getInstance", "Could not get instance of Config: " + e.getMessage());
 			} catch (ClassNotFoundException e) {
 				l.e("getInstance", "Database driver not found: " + e.getMessage());
+			} catch (NullPointerException e) {
+				l.e("getInstance", "NullPointerException while initialising Config! " + e.getMessage());
 			} catch (Exception e) {
-				l.e("getInstance", "Unknown error!\r\n" + e.getClass().getName() + ":" + e.getMessage());
+				l.e("getInstance", "Unknown error:\r\n" + e.getClass().getName() + ": " + e.getMessage());
 			}
 
 		return instance;

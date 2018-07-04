@@ -1,9 +1,15 @@
 package com.aastorp.config;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.GridBagLayout;
 
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 
 /**
  * A JPanel for a Setting and its Label (and/or other related Components) to display in. Having this ensures that there
@@ -17,10 +23,17 @@ public class SettingPanel extends JPanel {
 	private Setting setting;
 	
 	public SettingPanel(Setting setting) {
+		this.setLayout(new GridBagLayout());
 		this.label = setting.getJLabel();
 		this.setting = setting;
-		this.add("lbl" + this.getSetting().getName(), this.getLabel());
-		this.add("stg" + this.getSetting().getName(), (Component) this.getSetting());
+		if (this.getLabel() != null) {
+			this.getLabel().setBorder(BorderFactory.createEmptyBorder(3,3,3,10));
+			this.add(this.getLabel());
+			this.add((Component)this.getSetting());
+		} else {
+			this.add((Component)this.getSetting());
+		}
+		this.setBorder(BorderFactory.createLoweredSoftBevelBorder());
 	}
 
 	/**

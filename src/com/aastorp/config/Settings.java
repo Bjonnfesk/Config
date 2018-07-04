@@ -3,19 +3,14 @@
  */
 package com.aastorp.config;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 
 import com.aastorp.logger.Logger;
@@ -102,7 +97,7 @@ public class Settings extends JTabbedPane {
 	 */
 	public SettingCategory getSettingCategory(int index) {
 		if (this.getComponentAt(index) == null) {
-			return null;
+			throw new IndexOutOfBoundsException("No settingCategory at index " + index);
 		} else {
 			return (SettingCategory) this.getComponentAt(index);
 		}
@@ -142,7 +137,7 @@ public class Settings extends JTabbedPane {
 		Setting setting = null;
 		for (Component c : this.getComponents()) {
 			if (c.getName().equals(name)) {
-				//setting = c.get;
+				//TODO: Implements this!
 			}
 		}
 		return setting;
@@ -154,15 +149,14 @@ public class Settings extends JTabbedPane {
 	 * @return the settings
 	 */
 	public List<Setting> getSettings() {
-		List<Setting> tmpSettings = new LinkedList<Setting>();
+		List<Setting> tmpSettings = new ArrayList<Setting>();
 		for (int i = 0; i <= this.getTabCount() - 1; i++) {
 			SettingCategory c = (SettingCategory)this.getComponentAt(i);
-			for (SettingPanel d : (SettingPanel[])c.getComponents()) {
-				JOptionPane.showMessageDialog(null, d.toString());
-				tmpSettings.add(d.getSetting());
+			for (Component d : c.getComponents()) {
+				tmpSettings.add(((SettingPanel)d).getSetting());
 			}
 		}
-		return null;
+		return tmpSettings;
 	}
 
 	/**

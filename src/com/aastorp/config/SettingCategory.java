@@ -5,6 +5,7 @@ package com.aastorp.config;
 
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.awt.LayoutManager;
@@ -46,7 +47,7 @@ public class SettingCategory extends JPanel {
 
 	public SettingCategory(int id) {
 //		this(id, new FlowLayout(FlowLayout.LEADING, 5, 5));
-		this(id, new GridLayout(0, 3));
+		this(id, new GridLayout(0, 1));
 	}
 
 
@@ -100,10 +101,26 @@ public class SettingCategory extends JPanel {
 	 */
 	@Override
 	public Component add(Component comp) {
-		//Complement functionality...
+		switch (this.getComponentCount()) {
+		case 0:
+			this.setLayout(new GridLayout(1, 0));
+			break;
+		case 1:
+			this.setLayout(new GridLayout(0, 1));
+			break;
+		case 2: 
+			this.setLayout(new GridLayout(0, 2));
+			break;
+		case 3:
+			this.setLayout(new GridLayout(0, 3));
+			break;
+		case 4:
+			this.setLayout(new GridLayout(0, 2));
+		case (5-1000):
+			JOptionPane.showMessageDialog(null, "that's a lot!");
+			this.setLayout(new GridLayout(0, 4));
+		}
 		try {
-			Wrapper wrapper = new Wrapper(comp.toString(), 50);
-//			JOptionPane.showMessageDialog(null, "Adding:" + wrapper.work() + "\r\n: " + ((JPanel)comp).getBorder().toString());
 			return super.add(comp);
 		} catch (NullPointerException e) {
 			throw new NullPointerException("This component doesn't exist.");
@@ -143,6 +160,22 @@ public class SettingCategory extends JPanel {
 	public int getId() {
 		final String F = "getId";
 		return id;
+	}
+
+
+	/**
+	 * @return The friendlyName of the SettingCategory
+	 */
+	public String getFriendlyName() {
+		return friendlyName;
+	}
+
+
+	/**
+	 * @param friendlyName The new friendlyName to set.
+	 */
+	public void setFriendlyName(String friendlyName) {
+		this.friendlyName = friendlyName;
 	}
 
 }
