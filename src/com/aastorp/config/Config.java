@@ -1,10 +1,11 @@
 package com.aastorp.config;
 
-import java.awt.Component;
 import java.io.File;
+import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.LinkedList;
 
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 
 import com.aastorp.bibliothecaaastorpiana.databases.SqliteDatabase;
@@ -15,38 +16,40 @@ import com.aastorp.logger.Logger;
  * The Class Config.
  */
 public class Config {
-	
+
 	/** The logger. */
-	private Logger l;
-	
+	private static Logger l;
+
 	/** The settings, which doubles as the JTabbedPane for the Config dialog. */
 	private Settings settings;
-	
+
 	/** The setting database. */
 	private SettingDatabase sdb;
-	
+
 	/** The single instance of Config */
 	private static Config instance = null;
 
 	/**
 	 * Private constructor for singleton.
 	 */
-	private Config() {}
-	
+	private Config() {
+		Config.l = new Logger(Config.class, Integer.valueOf(Logger.INFO), true, new File("config.log"));
+	}
+
 	/**
 	 * Inits the Config, loading the settings from the specified database file.
 	 *
 	 * @param settingDatabaseFile the setting database file
 	 * @return The resulting Config
 	 */
-	private static Config init(File settingDatabaseFile) {
+	private static Config init(File settingDatabaseFile) throws SQLException, ClassNotFoundException, NullPointerException, Exception {
 		instance = new Config();
 		Config.getInstance().sdb = new SettingDatabase(settingDatabaseFile);
 		Config.getInstance().readSettings();
-		Config.getInstance().l = new Logger(Config.class, Integer.valueOf((Integer)Config.getInstance().getSetting("logLevel").getValue()), true, new File("config.log"));
+		Config.getInstance().settings.addChangeListener(new OmniListener());
 		return Config.getInstance();
 	}
-	
+
 	/**
 	 * Read settings from the database, storing them in this.settings.
 	 *
@@ -58,9 +61,16 @@ public class Config {
 			l = new Logger(this.getClass(), Logger.INFO, true, new File("config.log"));
 			l.d(F, "Started temporary Logger for readSettings() with logLevel INFO: Config's Logger l isn't initialised since the setting logLevel hasn't loaded yet...");
 		}
+		Setting[] settings = null;
+		try {
+			settings = this.getSettings().getSettings().toArray(new Setting[this.getSettings().getSettings().size()]); //?????
+		} catch (NullPointerException e) {
+			l.e(F, "Settings is null! Sadly, no more information can be given, as Java does not provide it even to developers.");
+			return;
+		}	
 		l.d(F, "\t<Settings>");
-		Setting[] settings = this.getSettings().getSettings().toArray(new Setting[this.getSettings().getSettings().size()]); //?????
-			for (Setting setting : settings) {
+		for (Setting setting : settings) {
+			try {
 //			<horribleXmlLoggingHack>
 				l.d(F, "\t\t<" + setting.getName() + ">");
 				l.d(F, "\t\t\t<value>");
@@ -74,9 +84,12 @@ public class Config {
 				l.d(F, "\t\t\t</settingType>");
 				l.d(F, "\t\t</" + setting.getName() + ">");
 //			</horribleXmlLoggingHack>
-				this.getSettings().add(setting);
+			} catch (NullPointerException e) {
+				l.w(F, "Got a Setting that is null! Sadly, no more information can be given, as Java does not provide it even to developers.");
 			}
-			l.d(F, "\t</Settings>");
+
+		}
+		l.d(F, "\t</Settings>");
 	}
 
 	/**
@@ -85,11 +98,24 @@ public class Config {
 	 * @return The Application Config.
 	 */
 	public static Config getInstance() {
+		if (l == null)
+			l = new Logger(Config.class, Logger.ERROR, true, new File("config.log"));
 		if (instance == null) 
-			instance = init(new File("settings.sqlite"));
+			try {
+				instance = init(new File("settings.sqlite"));
+			} catch (SQLException e) {
+				l.e("getInstance", "Could not get instance of Config: " + e.getMessage());
+			} catch (ClassNotFoundException e) {
+				l.e("getInstance", "Database driver not found: " + e.getMessage());
+			} catch (NullPointerException e) {
+				l.e("getInstance", "NullPointerException while initialising Config! " + e.getMessage());
+			} catch (Exception e) {
+				l.e("getInstance", "Unknown error:\r\n" + e.getClass().getName() + ": " + e.getMessage());
+			}
+
 		return instance;
 	}
-	
+
 	/**
 	 * Force an update of the settings from the database. Useful for making settings 
 	 * take effect when they change while the program is running.
@@ -99,7 +125,7 @@ public class Config {
 		Config.getInstance().readSettings();
 		//when this becomes observable, notify observers that config has changed.
 	}
-	
+
 	/**
 	 * Gets the value of the specified setting. If multiple settings have the same name,
 	 * this will only return the first one; having multiple settings by the same name can 
@@ -116,7 +142,7 @@ public class Config {
 		}
 		return setting;
 	}
-	
+
 	/**
 	 * Sets the setting.
 	 *
@@ -138,13 +164,13 @@ public class Config {
 	public Settings getSettings() {
 		return settings;
 	}
-	
+
 	/**
 	 * Gets the config pane.
 	 *
 	 * @return the config pane
 	 */
-	public JTabbedPane getConfigPane() {
+	public JTabbedPane getConfigJTabbedPane() {
 		return (JTabbedPane)settings;
 	}
 

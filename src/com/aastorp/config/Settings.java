@@ -5,12 +5,12 @@ package com.aastorp.config;
 
 import java.awt.Component;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 
 import com.aastorp.logger.Logger;
@@ -29,7 +29,7 @@ public class Settings extends JTabbedPane {
 	
 	/** The settings. Why do we need this? It should probably be chopped, since the values 
 	 * of the Settings are already stored by the JComponents. */
-	private List<Setting> settings = new LinkedList<Setting>();
+	private HashMap<String, Object> settings = new HashMap<String, Object>();
 	
 	/**
 	 * Adds the.
@@ -37,17 +37,21 @@ public class Settings extends JTabbedPane {
 	 * @param setting the setting
 	 */
 	public void add(Setting setting) {
-		
-		this.settings.add(setting);
+		this.settings.put(setting.getName(), setting.getValue());
 		SettingCategory settingCategory = this.addSettingCategory(setting.getSettingCategory());
 		
-		JPanel settingPanel = new JPanel();
-		try {
-			settingCategory.add((Component) setting.getJLabel());
-		} catch (NullPointerException e) {
-			l.d("add", "Setting " + setting.getName() + " has no JLabel. This is normal for some settings, like CheckBoxSettings.");
-		}
-		settingCategory.add((Component) setting);
+//		JPanel settingPanel = new JPanel();
+//		settingPanel.setBorder(BorderFactory.createTitledBorder(setting.getFriendlyName()));
+//		
+//		try {
+//			settingPanel.add((Component) setting.getJLabel());
+//		} catch (NullPointerException e) {
+//			l.d("add", "Setting " + setting.getName() + " has no JLabel. This is normal for some settings, like CheckBoxSettings.");
+//		}
+//		settingPanel.add((Component) setting);
+//		settingCategory.add(settingPanel);
+		SettingPanel settingPanel = new SettingPanel(setting);
+		settingCategory.add(settingPanel);
 		this.validate();
 	}
 	
@@ -93,7 +97,7 @@ public class Settings extends JTabbedPane {
 	 */
 	public SettingCategory getSettingCategory(int index) {
 		if (this.getComponentAt(index) == null) {
-			return null;
+			throw new IndexOutOfBoundsException("No settingCategory at index " + index);
 		} else {
 			return (SettingCategory) this.getComponentAt(index);
 		}
@@ -131,9 +135,9 @@ public class Settings extends JTabbedPane {
 	 */
 	public Setting getSettingByName(String name) {
 		Setting setting = null;
-		for (Setting s : settings) {
-			if (s.getName().equals(name)) {
-				setting = s;
+		for (Component c : this.getComponents()) {
+			if (c.getName().equals(name)) {
+				//TODO: Implements this!
 			}
 		}
 		return setting;
@@ -145,18 +149,16 @@ public class Settings extends JTabbedPane {
 	 * @return the settings
 	 */
 	public List<Setting> getSettings() {
-		return settings;
+		List<Setting> tmpSettings = new ArrayList<Setting>();
+		for (int i = 0; i <= this.getTabCount() - 1; i++) {
+			SettingCategory c = (SettingCategory)this.getComponentAt(i);
+			for (Component d : c.getComponents()) {
+				tmpSettings.add(((SettingPanel)d).getSetting());
+			}
+		}
+		return tmpSettings;
 	}
 
-	/**
-	 * Sets the settings.
-	 *
-	 * @param settings the settings to set
-	 */
-	public void setSettings(List<Setting> settings) {
-		this.settings = settings;
-	}
-	
 	/**
 	 * Gets the setting categories.
 	 *

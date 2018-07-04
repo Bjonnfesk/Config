@@ -1,7 +1,17 @@
 package com.aastorp.config;
 
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.Window;
+
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -30,6 +40,53 @@ public class TextFieldSetting extends JTextField implements Setting {
 		this.setValue((String)value);
 		this.setFriendlyName(friendlyName);
 		this.setSettingCategory(new SettingCategory(settingCategoryId));
+		this.setBorder(BorderFactory.createCompoundBorder(
+				this.getBorder(),
+				BorderFactory.createEmptyBorder(2, 5, 2, 5)));
+		this.setFont(new Font("Helvetica", Font.PLAIN, 18));
+		this.addKeyListener(new OmniListener());
+	}
+	
+	/* (non-Javadoc)
+	 * @see javax.swing.JTextField#getPreferredSize() 
+	 */
+	@Override 
+	public Dimension getPreferredSize() {
+		Dimension preferred = super.getPreferredSize();
+		Dimension minimum = getMinimumSize();
+		Dimension maximum = getMaximumSize();
+		preferred.width = Math.min(Math.max(preferred.width, minimum.width), maximum.width);
+		preferred.height = Math.min(Math.max(preferred.height, minimum.height), maximum.height);
+		return preferred;
+	}
+	
+	/* (non-Javadoc)
+	 * @see javax.swing.JTextField#getMinimumSize()
+	 */
+	@Override
+	public Dimension getMinimumSize() {
+		Dimension d = new Dimension();
+		Graphics2D g = (Graphics2D)this.getGraphics();
+		if (g == null) {
+			//this Setting is not on screen yet, therefore it has no graphics and we cannot resize it...
+		} else {
+			FontMetrics fm = null;
+			try {
+				fm = g.getFontMetrics(this.getFont());
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(null, e);
+			}
+			Integer correctionValue = 19; //for most Look and Feels, FontMetrics.stringWidth is off by 19.
+			if (UIManager.getLookAndFeel().getName() == "Nimbus") {
+				correctionValue = 23; //for Nimbus, FontMetrics.stringWidth is off by 23.
+//			} else if (UIManager.getLookAndFeel().getName() == "Metal") {
+//				correctionValue = 19; //for Metal, FontMetrics.stringWidth is off by 23.
+//			} else if (UIManager.getLookAndFeel().getName() == "Windows") {
+//				correctionValue = 19;
+			}
+			d.setSize(fm.stringWidth((String)this.getValue()) + correctionValue, super.getMinimumSize().getHeight());
+		}
+		return d;
 	}
 
 	/* (non-Javadoc)
@@ -79,6 +136,10 @@ public class TextFieldSetting extends JTextField implements Setting {
 	@Override
 	public void setValue(Object value) {
 		this.setText(String.valueOf(value));
+		Window windowAncestor = SwingUtilities.getWindowAncestor(this);
+		if (windowAncestor == null)
+			return; //since there's no window on the screen, there's no reason to resize anything.
+		windowAncestor.pack(); //resizes all components to fit their values.
 	}
 
 	/**

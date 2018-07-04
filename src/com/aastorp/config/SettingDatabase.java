@@ -24,8 +24,9 @@ public class SettingDatabase extends SqliteDatabase {
 	 *
 	 * @param databaseFile The database file to read settings from.
 	 */
-	public SettingDatabase(File databaseFile) {
+	public SettingDatabase(File databaseFile) throws SQLException, ClassNotFoundException, Exception {
 		super(databaseFile);
+		
 		final String F = "__constructor";
 		this.l = new Logger(this.getClass(), Logger.INFO, true, new File("config.log"));
 
@@ -35,7 +36,7 @@ public class SettingDatabase extends SqliteDatabase {
 	/**
 	 * Builds the Database's required Tables if they do not exist.
 	 */
-	protected void buildIfNotExisting() {
+	protected void buildIfNotExisting() throws SQLException {
 		final String F = "buildIfNotExisting";
 		String sql;
 		if (!tableExists("setting")) {
@@ -130,7 +131,7 @@ public class SettingDatabase extends SqliteDatabase {
 						| SQLException e) {
 					try {
 						if (e.getClass() == InvocationTargetException.class) {
-							l.e(F, "InvocationTargetException on setting " + rs.getString("name") + ": " + e.getCause().getClass() + "::" + e.getCause().getMessage() + ". Ensure setting database is correctly formatted.");
+							l.e(F, "Could not construct Setting for setting " + rs.getString("name") + ": " + e.getCause().getClass() + "::" + e.getCause().getMessage() + ". Ensure setting database is correctly formatted.");
 						} else {
 							l.e(F, e, " on setting " + rs.getString("name") + ". Ensure setting database is correctly formatted.");
 						}
