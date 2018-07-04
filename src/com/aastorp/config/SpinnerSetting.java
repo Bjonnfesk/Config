@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.aastorp.config;
 
 import java.io.File;
@@ -10,7 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map;
 
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerListModel;
 
@@ -23,7 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 // TODO: Auto-generated Javadoc
 /**
- * The Class SpinnerSetting.
+ * Represents a Setting that is represented to the user as a JSpinner,
+ * with the valid values defined by the SettingDatabase's Data field
+ * as the selectable values.
  *
  * @author Bjørn Aastorp
  */
@@ -71,26 +72,39 @@ public class SpinnerSetting extends JSpinner implements Setting {
 				dataRs.next();
 				String json = dataRs.getString("data");
 				Map<String, Object> settingData = om.readValue(json, new TypeReference<Map<String, Object>>() {});
-				this.setModel(new SpinnerListModel(((ArrayList<?>)settingData.get("validValues"))));
-			} catch (JsonProcessingException | SQLException e) {
+				ArrayList<?> validValues = (ArrayList<?>)settingData.get("validValues");
+				this.setModel(new SpinnerListModel(validValues));
+			} catch (JsonProcessingException | SQLException | IllegalArgumentException e) {
 				l.e("__constructor", e);
 			} catch (IOException e) {
 				l.e("__constructor", e);
 			}
 		}
-		/*
-		 * Make this more dynamic by letting the data field also define 
-		 * whether the Spinner should have a SpinnerNumberModel or 
-		 * SpinnerListModel.
-		 */
-		try {
-			this.setValue(Integer.valueOf((String)value));
-		} catch (NumberFormatException e) {
-			this.setValue((String)value);
-		}
-		
+		this.setValue(value);
 	}
 	
+	
+	/* (non-Javadoc)
+	 * @see com.aastorp.config.Setting#setValue(java.lang.Object)
+	 */
+	@Override
+	public void setValue(Object value) {
+		Class<? extends Object> valueClass = value.getClass();
+		if (valueClass == int.class || value instanceof Integer) {
+			super.setValue((int)value);
+		} else if (valueClass == boolean.class || value instanceof Boolean) {
+			super.setValue((boolean)value);
+		} else if (value instanceof String) {
+			try {
+				super.setValue(Integer.valueOf((String)value));
+			} catch (IllegalArgumentException e){
+				super.setValue((String)value);
+			} 
+		} else {
+			throw new IllegalArgumentException("Value " + String.valueOf(value) + " for setting " + this.getName() + " is invalid!");
+		}
+		this.setEditor(new JSpinner.DefaultEditor(this));
+	}
 
 	/* (non-Javadoc)
 	 * @see com.aastorp.config.Setting#getFriendlyName()

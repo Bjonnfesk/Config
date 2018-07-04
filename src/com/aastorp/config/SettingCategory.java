@@ -12,12 +12,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.BevelBorder;
 
+import com.aastorp.bibliothecaaastorpiana.common.Common;
 import com.aastorp.bibliothecaaastorpiana.databases.SelectQuery;
 import com.aastorp.bibliothecaaastorpiana.databases.WhereClause;
+import com.aastorp.linguistics.Wrapper;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -42,8 +45,8 @@ public class SettingCategory extends JPanel {
 	
 
 	public SettingCategory(int id) {
-		this(id, new FlowLayout(FlowLayout.LEADING, 5, 5));
-		//this(id, new GridLayout(0, 4));
+//		this(id, new FlowLayout(FlowLayout.LEADING, 5, 5));
+		this(id, new GridLayout(0, 3));
 	}
 
 
@@ -75,9 +78,9 @@ public class SettingCategory extends JPanel {
 			}
 			this.setName(rs.getString("friendlyName"));
 		} catch (HeadlessException e) {
-
+			e.printStackTrace();
 		} catch (SQLException e) {
-			
+			e.printStackTrace();
 		}
 		this.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 	}
@@ -99,6 +102,8 @@ public class SettingCategory extends JPanel {
 	public Component add(Component comp) {
 		//Complement functionality...
 		try {
+			Wrapper wrapper = new Wrapper(comp.toString(), 50);
+//			JOptionPane.showMessageDialog(null, "Adding:" + wrapper.work() + "\r\n: " + ((JPanel)comp).getBorder().toString());
 			return super.add(comp);
 		} catch (NullPointerException e) {
 			throw new NullPointerException("This component doesn't exist.");

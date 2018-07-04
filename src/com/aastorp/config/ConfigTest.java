@@ -16,6 +16,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
 
 import com.aastorp.bibliothecaaastorpiana.databases.SelectQuery;
@@ -85,7 +86,9 @@ public class ConfigTest extends JFrame {
 		
 		JPanel configPanel = new JPanel();
 		configPanel.setBorder(new EmptyBorder(1, 2, 2, 2));
-		configPanel.add(Config.getInstance().getConfigPane(), BorderLayout.CENTER);
+		Config configInstance = Config.getInstance();
+		JTabbedPane configJTabbedPane = configInstance.getConfigJTabbedPane();
+		configPanel.add(configJTabbedPane, BorderLayout.CENTER);
 		contentPane.add(configPanel, BorderLayout.NORTH);
 		
 		
