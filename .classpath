@@ -2,13 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Linguistics"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Logger"/>
 	<classpathentry kind="lib" path="ref/sqlite-jdbc-3.23.1.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/BibliothecaAastorpiana"/>
 	<classpathentry kind="lib" path="ref/jackson-annotations-2.8.8.jar"/>
 	<classpathentry kind="lib" path="ref/jackson-core-2.8.8.jar"/>
 	<classpathentry kind="lib" path="ref/jackson-databind-2.8.8.jar"/>
 	<classpathentry kind="lib" path="ref/jsoup-1.10.2.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/BibliothecaAastorpiana"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Linguistics"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Logger"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

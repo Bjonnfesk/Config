@@ -1,14 +1,18 @@
 package com.aastorp.config;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Window;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
+import com.aastorp.bibliothecaaastorpiana.common.Common;
 import com.aastorp.bibliothecaaastorpiana.databases.SqliteDatabase;
+import com.aastorp.bibliothecaaastorpiana.layouts.MagicGridLayout;
 import com.aastorp.logger.Logger;
 
 // TODO: Auto-generated Javadoc
@@ -46,6 +50,8 @@ public class Config {
 		instance = new Config();
 		Config.getInstance().sdb = new SettingDatabase(settingDatabaseFile);
 		Config.getInstance().readSettings();
+		if (Config.getInstance().settings == null) 
+			Common.confirm("WTF‽", "Config.getInstance().settings is still null, this should not happen...");
 		Config.getInstance().settings.addChangeListener(new OmniListener());
 		return Config.getInstance();
 	}
@@ -63,33 +69,38 @@ public class Config {
 		}
 		Setting[] settings = null;
 		try {
-			settings = this.getSettings().getSettings().toArray(new Setting[this.getSettings().getSettings().size()]); //?????
+			settings = this.getSettings().getSettings().toArray(new Setting[this.getSettings().getSettings().size()]);
 		} catch (NullPointerException e) {
-			l.e(F, "Settings is null! Sadly, no more information can be given, as Java does not provide it even to developers.");
+			l.e(F, "NullPointerException! Sadly, no more information can be given, as Java does not provide it even to developers (Oracle, *hint* *hint*).");
 			return;
-		}	
+		}
 		l.d(F, "\t<Settings>");
 		for (Setting setting : settings) {
 			try {
 //			<horribleXmlLoggingHack>
-				l.d(F, "\t\t<" + setting.getName() + ">");
-				l.d(F, "\t\t\t<value>");
-				l.d(F, "\t\t\t\t" + String.valueOf(setting.getValue()));
-				l.d(F, "\t\t\t</value>");
-				l.d(F, "\t\t\t<settingCategory>");
-				l.d(F, "\t\t\t\t" + String.valueOf(setting.getSettingCategory().getName()));
-				l.d(F, "\t\t\t</settingCategory>");
-				l.d(F, "\t\t\t<settingType>");
-				l.d(F, "\t\t\t\t" + String.valueOf(setting.getSettingType()));
-				l.d(F, "\t\t\t</settingType>");
-				l.d(F, "\t\t</" + setting.getName() + ">");
+				l.i(F, "\t\t<" + setting.getName() + ">");
+				l.i(F, "\t\t\t<value>");
+				l.i(F, "\t\t\t\t" + String.valueOf(setting.getValue()));
+				l.i(F, "\t\t\t</value>");
+				l.i(F, "\t\t\t<settingCategory>");
+				l.i(F, "\t\t\t\t" + String.valueOf(setting.getSettingCategory().getName()));
+				l.i(F, "\t\t\t</settingCategory>");
+				l.i(F, "\t\t\t<settingType>");
+				l.i(F, "\t\t\t\t" + String.valueOf(setting.getSettingType()));
+				l.i(F, "\t\t\t</settingType>");
+				l.i(F, "\t\t</" + setting.getName() + ">");
 //			</horribleXmlLoggingHack>
 			} catch (NullPointerException e) {
-				l.w(F, "Got a Setting that is null! Sadly, no more information can be given, as Java does not provide it even to developers.");
+				l.w(F, "Got a Setting that is null! Sadly, no more information can be given, as Java does not provide it even to developers (Oracle, *hint* *hint*).");
 			}
 
 		}
 		l.d(F, "\t</Settings>");
+		
+	}
+	
+	public void saveSettings() {
+		final String F = "saveSettings";
 	}
 
 	/**
@@ -112,7 +123,6 @@ public class Config {
 			} catch (Exception e) {
 				l.e("getInstance", "Unknown error:\r\n" + e.getClass().getName() + ": " + e.getMessage());
 			}
-
 		return instance;
 	}
 
@@ -125,9 +135,30 @@ public class Config {
 		Config.getInstance().readSettings();
 		//when this becomes observable, notify observers that config has changed.
 	}
+	
+	public void resizeParent(Component child) {
+		if (child == null) {
+			throw new NullPointerException("Cannot resize the parent window of a Component that is null!");
+		}
+		Window window = SwingUtilities.getWindowAncestor(child);
+		if (window == null) {
+			l.w("resizeParent", "Cannot resize a window that is null. In other words, the Component `child` passed to `resizeParent()` has no parent window. Function will return.");
+			return;
+		}
+		window.setPreferredSize(null); //force a recalculation of the preferred size.
+		Dimension wd = window.getPreferredSize();
+		Dimension jtd = settings.getPreferredSize();
+		
+		Dimension d = new Dimension(Math.max(wd.width, jtd.width + 25), wd.height);
+		
+		window.setPreferredSize(d);
+
+		window.pack();
+		window.repaint();
+	}
 
 	/**
-	 * Gets the value of the specified setting. If multiple settings have the same name,
+	 * Gets the specified setting. If multiple settings have the same name,
 	 * this will only return the first one; having multiple settings by the same name can 
 	 * therefore be considered unsupported.
 	 *
@@ -136,10 +167,11 @@ public class Config {
 	 */
 	public Setting getSetting(String name) {
 		Setting setting = this.settings.getSettingByName(name);
-		l.i("getSetting", "Setting " + name + " has a value of " + String.valueOf(setting));
 		if (setting == null) {
 			l.e("getSetting", "Could not get setting " + name);
+			return null;
 		}
+		l.i("getSetting", "Setting " + name + " has a value of " + String.valueOf(setting.getValue()));
 		return setting;
 	}
 
@@ -150,10 +182,16 @@ public class Config {
 	 * @param value the value
 	 */
 	public void setSetting(String friendlyName, Object value) {
+		final String F = "setSetting";
+		if (friendlyName == null) throw new IllegalArgumentException("friendlyName is null!");
+		l.i(F, "Setting " + friendlyName + " to " + String.valueOf(value) + "...");
 		HashMap<String, Object> whereClauses = new HashMap<String, Object>();
 		whereClauses.put("friendlyName", friendlyName);
-
+		l.i(F, "done.");
+		
+		l.i(F, "Saving new value " + String.valueOf(value) + " of setting " + friendlyName + " to database...");
 		this.sdb.update("setting", whereClauses, "value", String.valueOf(value)); 
+		l.i(F, "done.");
 	}
 
 	/**
@@ -166,21 +204,21 @@ public class Config {
 	}
 
 	/**
-	 * Gets the config pane.
-	 *
-	 * @return the config pane
-	 */
-	public JTabbedPane getConfigJTabbedPane() {
-		return (JTabbedPane)settings;
-	}
-
-	/**
 	 * Gets the setting database.
 	 *
 	 * @return the sdb
 	 */
 	public SqliteDatabase getSettingDatabase() {
 		return sdb;
+	}
+	
+	/**
+	 * Gets the logger.
+	 * 
+	 * @return the logger.
+	 */
+	public Logger getLogger() {
+		return this.l;
 	}
 
 }

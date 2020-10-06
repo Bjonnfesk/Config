@@ -4,24 +4,32 @@
 package com.aastorp.config;
 
 import java.awt.Component;
-import java.awt.FlowLayout;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
+import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.HeadlessException;
 import java.awt.LayoutManager;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 
-import com.aastorp.bibliothecaaastorpiana.common.Common;
 import com.aastorp.bibliothecaaastorpiana.databases.SelectQuery;
 import com.aastorp.bibliothecaaastorpiana.databases.WhereClause;
-import com.aastorp.linguistics.Wrapper;
+import com.aastorp.bibliothecaaastorpiana.interaction.MessageBoxes;
+import com.aastorp.bibliothecaaastorpiana.layouts.MagicGridLayout;
+import com.aastorp.logger.Logger;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -31,23 +39,30 @@ import com.aastorp.linguistics.Wrapper;
  */
 public class SettingCategory extends JPanel {
 	
+	/**  The logger. */
+	private Logger l = new Logger(SettingCategory.class, Integer.valueOf(Logger.INFO), true, new File("config.log"));
+	
 	/**  The database id of the SettingCategory. */
 	private int id;
 	
 	/**  The name of the tab the settings in this SettingCategory will display in. */
 	private String friendlyName;
+
+	private boolean antiRecursion;
+	
 	
 	/**
 	 *  A List of the SettingGroups belonging to this SettingCategory. Each displays in its own SettingGroupBox.
 	 * 
 	 * @param id the id
+	 * @wbp.parser.constructor
 	 */ 
 	//List<?> settingGroups; 
 	
 
 	public SettingCategory(int id) {
 //		this(id, new FlowLayout(FlowLayout.LEADING, 5, 5));
-		this(id, new GridLayout(0, 1));
+		this(id, new MagicGridLayout());
 	}
 
 
@@ -82,8 +97,28 @@ public class SettingCategory extends JPanel {
 			e.printStackTrace();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 		this.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+	}
+	
+	
+	@Override
+	public Dimension getPreferredSize() {
+//		Dimension superPreferredSize = super.getPreferredSize();
+//		Dimension preferredSize = new Dimension();
+//		
+//		preferredSize.setSize(superPreferredSize.width, Math.max(80, superPreferredSize.height));
+//		return preferredSize;
+//		---------------------
+//		Above code is strange and useless? I'll just super.getPreferredSize()...
+		return super.getPreferredSize();
+//		not useless anymore... now it makes sure the window is tall enough.
 	}
 	
 	/**
@@ -101,31 +136,33 @@ public class SettingCategory extends JPanel {
 	 */
 	@Override
 	public Component add(Component comp) {
-		switch (this.getComponentCount()) {
-		case 0:
-			this.setLayout(new GridLayout(1, 0));
-			break;
-		case 1:
-			this.setLayout(new GridLayout(0, 1));
-			break;
-		case 2: 
-			this.setLayout(new GridLayout(0, 2));
-			break;
-		case 3:
-			this.setLayout(new GridLayout(0, 3));
-			break;
-		case 4:
-			this.setLayout(new GridLayout(0, 2));
-		case (5-1000):
-			JOptionPane.showMessageDialog(null, "that's a lot!");
-			this.setLayout(new GridLayout(0, 4));
-		}
+		final String F = "add";
+		//int columnCount = this.calculateNewColumnCount();
+		//((GridLayout)this.getLayout()).setColumns(columnCount);
 		try {
-			return super.add(comp);
+			//this.setFriendlyName(String.valueOf(columnCount));
+			Component addedComp = super.add(comp);
+			if (this.getLayout() instanceof MagicGridLayout) { 
+				((MagicGridLayout)this.getLayout()).autoResize(this);
+			}
+			return addedComp;
 		} catch (NullPointerException e) {
 			throw new NullPointerException("This component doesn't exist.");
+		} catch (Exception e) {
+			l.e(F, e);
+			throw e;
 		}
 		
+	}
+	
+	/**
+	 * @see com.aastorp.config.SettingCategory#calculateNewColumnCount(int)
+	 * 
+	 * @return 
+	 */
+	private int calculateNewColumnCount() {
+		// TODO Auto-generated method stub
+		return 1;
 	}
 
 	/**
@@ -172,10 +209,78 @@ public class SettingCategory extends JPanel {
 
 
 	/**
-	 * @param friendlyName The new friendlyName to set.
+	 * @param friendlyName The new friendlyName to set
 	 */
 	public void setFriendlyName(String friendlyName) {
 		this.friendlyName = friendlyName;
 	}
-
+	
+	/**
+	 * Returns a list of the Settings in this SettingCategory
+	 * 
+	 * @return The Settings in this SettingCategory
+	 */
+	public List<Setting> getSettings() {
+		List<Component> components = new LinkedList<Component>();
+		List<Setting> settings = new LinkedList<Setting>();
+		components = Arrays.asList(this.getComponents());
+		for (Component c : components) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(c);
+			sb.append("\r\n");
+			sb.append(" IN " + this.getName());
+			sb.append(" IS ");
+			if (c.getClass() != SettingPanel.class) {
+				sb.append(" NOT ");
+			} else {
+				settings.add(((SettingPanel)c).getSetting());
+			}
+			sb.append("a SettingPanel");
+			//JOptionPane.showMessageDialog(null, sb.toString());
+		}
+		
+		return settings;
+	}
+	
+	@Override
+	public void setVisible(boolean visibility) {
+		final String F = "setVisible";
+		LayoutManager layout = this.getLayout();
+//		if (layout instanceof MagicGridLayout) {
+//			l.d(F, "Trying to resize window...");
+//			((MagicGridLayout) layout).autoResize(this, true);
+//		} else {
+//			Common.confirm("", "layout isn't a MagicGridLayout! It's a " + layout.getClass().getName());
+//		}
+		
+		/*
+		 * 
+		 * OH MY GOD WHY DOES THE WINDOW KEEP GETTING BIGGER WHEN YOU SWITCH TABS?!
+		 * PREFERREDSIZE KEEPS RETURNING HIGHER AND HIGHER NUMBERS!!!
+		 * I NEED TO WRITE MY OWN PREFERREDSIZE METHOD!!!
+		 * OR THE PROBLEM MIGHT BE IN CONFIG->RESIZEPARENT()! IT DOES SETPREFERREDSIZE!!
+		 * Yes, the problem was in Config->ResizeParent(). Still, a new and improved 
+		 * getPreferredSize() in ConfigFrame might be a good idea, as the default one
+		 * returns a height that is far too small to show the Apply/Cancel buttons.
+		 * 
+		 */
+		Window windowAncestor = SwingUtilities.getWindowAncestor(this);
+		if (layout != null && layout instanceof MagicGridLayout) {
+			if (this.antiRecursion == false) {
+				this.antiRecursion = true;
+				if (windowAncestor != null) {
+					((MagicGridLayout)layout).autoResize(this);
+					
+//					MessageBoxes.confirm("Preferred size of " + String.valueOf(((SettingPanel) this.getComponents()[0]).getLabel()), String.valueOf(this.getComponents()[0].getPreferredSize()));
+					Config.getInstance().resizeParent(this);
+				}
+				super.setVisible(visibility);
+			} else {
+				super.setVisible(visibility);
+				this.antiRecursion = false;
+			}
+		}
+		
+//		if (!Arrays.asList(this.getComponents()).contains(this.btnApply)) super.addImpl(this.btnApply, null, -1);
+	}
 }

@@ -19,7 +19,7 @@ import javax.swing.UIManager;
  */
 public class TextFieldSetting extends JTextField implements Setting {
 	
-	/** The anti recursion. */
+	/** Prevent excessive recursion. */
 	private boolean antiRecursion = false;
 	/** The SettingCategory of the setting. This controls which tab the setting gets added to. */
 	private SettingCategory settingCategory;
@@ -30,10 +30,10 @@ public class TextFieldSetting extends JTextField implements Setting {
 	/**
 	 * Instantiates a new text field setting.
 	 *
-	 * @param name the name
-	 * @param value the value
-	 * @param friendlyName the friendly name
-	 * @param settingCategoryId the setting category id
+	 * @param name The name of this setting.
+	 * @param value The value of this setting.
+	 * @param friendlyName The friendly name (display name) of this setting.
+	 * @param settingCategoryId The setting category is this setting.
 	 */
 	public TextFieldSetting(String name, Object value, String friendlyName, int settingCategoryId) {
 		this.setName(name);
@@ -60,7 +60,8 @@ public class TextFieldSetting extends JTextField implements Setting {
 		return preferred;
 	}
 	
-	/* (non-Javadoc)
+	/** Gets the minimum size a JTextField must have in order to display all its contents.
+	 * @return The minimum size or null.
 	 * @see javax.swing.JTextField#getMinimumSize()
 	 */
 	@Override
@@ -79,12 +80,12 @@ public class TextFieldSetting extends JTextField implements Setting {
 			Integer correctionValue = 19; //for most Look and Feels, FontMetrics.stringWidth is off by 19.
 			if (UIManager.getLookAndFeel().getName() == "Nimbus") {
 				correctionValue = 23; //for Nimbus, FontMetrics.stringWidth is off by 23.
-//			} else if (UIManager.getLookAndFeel().getName() == "Metal") {
-//				correctionValue = 19; //for Metal, FontMetrics.stringWidth is off by 23.
-//			} else if (UIManager.getLookAndFeel().getName() == "Windows") {
-//				correctionValue = 19;
 			}
-			d.setSize(fm.stringWidth((String)this.getValue()) + correctionValue, super.getMinimumSize().getHeight());
+			if (fm != null) {
+				d.setSize(fm.stringWidth((String)this.getValue()) + correctionValue, super.getMinimumSize().getHeight() + 3);
+			} else {
+				return null;
+			}
 		}
 		return d;
 	}

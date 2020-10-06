@@ -1,15 +1,11 @@
 package com.aastorp.config;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagLayout;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
 
 /**
  * A JPanel for a Setting and its Label (and/or other related Components) to display in. Having this ensures that there

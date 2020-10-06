@@ -1,13 +1,11 @@
 package com.aastorp.config;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Window;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -18,13 +16,15 @@ import javax.swing.event.ChangeListener;
 public class OmniListener implements ChangeListener, KeyListener {
 	@Override
 	public void stateChanged(ChangeEvent arg0) {
-		Window window = SwingUtilities.getWindowAncestor((Component) arg0.getSource());
+		
 		if (arg0.getSource().getClass() == JSpinner.class) {
 			JSpinner jSpinner = (JSpinner)arg0.getSource();
 			try {
 				UIManager.setLookAndFeel((String)jSpinner.getValue());
 				SwingUtilities.updateComponentTreeUI(jSpinner.getRootPane());
-				SwingUtilities.getWindowAncestor(jSpinner).pack();
+				Window window = SwingUtilities.getWindowAncestor(jSpinner);
+				window.pack();
+				window.repaint();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -40,16 +40,11 @@ public class OmniListener implements ChangeListener, KeyListener {
 			}
 		} else if (arg0.getSource().getClass() == Settings.class){
 			Settings settings = (Settings)arg0.getSource();
-			SettingCategory settingCategory = (SettingCategory)settings.getSelectedComponent();
-			Dimension d = settingCategory.getPreferredSize();
-			
-			Dimension nd = new Dimension(d.width, d.height);
-			settings.setPreferredSize(nd);
-
-			window.pack();
-			window.repaint();
+//			System.out.println(settings.toString());
+			settings.repaint();
+			Config.getInstance().resizeParent((Component)settings);
 		} else {
-			JOptionPane.showMessageDialog(null, arg0.getSource().getClass().getName(), "Unsupported Component type for OmniListener: " + arg0.getSource().getClass(), JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(null, arg0.getSource().getClass().getName(), "Unsupported Component type for OmniListener -> stateChanged(): " + arg0.getSource().getClass(), JOptionPane.WARNING_MESSAGE);
 		}
 	}
 

@@ -59,7 +59,7 @@ public class SettingDatabase extends SqliteDatabase {
 							"Log Level",
 							1,
 							"Spinner",
-							"{validValues: [0, 1, 2, 3, 4]}"
+							"{\"validValues\": [0, 1, 2, 3, 4]}"
 					});
 			insert(
 					"setting",
@@ -77,7 +77,7 @@ public class SettingDatabase extends SqliteDatabase {
 							"testing",
 							2,
 							"Spinner",
-							"{validValues: [0, 1, 2, 3, 4]}"
+							"{\"validValues\": [0, 1, 2, 3, 4]}"
 					});
 		} else {
 			l.i(F, "Table setting already exists.");
@@ -120,10 +120,10 @@ public class SettingDatabase extends SqliteDatabase {
 				});
 		rs = this.select(selectQuery);
 		while(true) {
-
 				try {
 					while(rs.next()) {
-						settings.add((Setting)SettingFactory.createSetting(rs.getString("settingType"), rs.getString("name"), rs.getObject("value"), rs.getString("friendlyName"), rs.getInt("settingCategory")));
+						Setting setting = (Setting)SettingFactory.createSetting(rs.getString("settingType"), rs.getString("name"), rs.getObject("value"), rs.getString("friendlyName"), rs.getInt("settingCategory"));
+						settings.add(setting);
 					}
 					break; //quit the loop when all Settings are added to the list
 				} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
@@ -141,10 +141,7 @@ public class SettingDatabase extends SqliteDatabase {
 					}
 					continue;
 				}
-
 		}
-		
 		return settings;
 	}
-
 }

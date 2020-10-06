@@ -1,11 +1,8 @@
 package com.aastorp.config;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-
-import com.aastorp.logger.Logger;
 
 /**
  * A factory for creating Setting objects.
@@ -20,14 +17,14 @@ public class SettingFactory {
 	 * @param value The value of this Setting.
 	 * @param friendlyName The friendly name of this Setting, which will be displayed as its Label (or in the case of certain Setting types, 
 	 * @param settingCategoryId The database ID of the SettingCategory this Setting belongs to. 
-	 * @return the setting
-	 * @throws NoSuchMethodException the no such method exception
-	 * @throws SecurityException the security exception
-	 * @throws InstantiationException the instantiation exception
-	 * @throws IllegalAccessException the illegal access exception
-	 * @throws IllegalArgumentException the illegal argument exception
-	 * @throws InvocationTargetException the invocation target exception
-	 * @throws ClassNotFoundException the class not found exception
+	 * @return The setting produced by the factory
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws ClassNotFoundException
 	 */
 	public static Setting createSetting(String settingType, String name, Object value, String friendlyName, int settingCategoryId) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, ClassNotFoundException {
 		Class<?> settingClass = Class.forName("com.aastorp.config." + settingType + "Setting");
@@ -35,19 +32,22 @@ public class SettingFactory {
 			
 			//if settingClass is null, the type of Setting is invalid.
 			
-			throw new NullPointerException("Setting type " + settingType + " does not exist!");
+			throw new IllegalArgumentException("Class " + settingType + " does not exist!");
 		}
 		if (Arrays.asList(settingClass.getInterfaces()).contains(Setting.class)) {
 			
 			//if the settingClass implements Setting, call the constructor for this type of Setting through Reflection...
 			
 			Constructor<?> constructor = settingClass.getConstructor(String.class, Object.class, String.class, int.class);
+			
+			//return the result of the constructor!
+			
 			return (Setting) constructor.newInstance( new Object[] {name, value, friendlyName, settingCategoryId});
 		} else {
 			
-			//if not, complain...
+			//if the settingClass does not implement Setting, complain about it...
 			
-			throw new IllegalArgumentException("Setting type " + settingClass.getName() + " is not a subclass of Setting!");
+			throw new IllegalArgumentException("Class " + settingClass.getName() + " does not implement Setting!");
 		}
 	}
 }
